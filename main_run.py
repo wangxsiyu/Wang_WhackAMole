@@ -4,8 +4,10 @@ import func_visualize
 
 env = WhackAMole(render_mode="human")
 params = env.params
+print(params)
 params['mole']['p_popping'] = 0.5
+params['gaze']['radius'] = 100
+params['mole']['max_life'] = 1000
 env.set_params(params)
-# print(env.params)
 
 visualize_env(env)

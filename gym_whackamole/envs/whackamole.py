@@ -11,7 +11,6 @@ class WhackAMole(gym.Env):
     params = dict()
     def __init__(self, render_mode = None, window_size = (512, 512), render_fps = 20, n_frame_per_episode = 500):
         print(f'render mode: {render_mode}')
-        self.render_mode = render_mode
         self.window_size = window_size # PyGame window size
         self.metadata['render_fps'] = render_fps
         self.total_num_of_frames = n_frame_per_episode
@@ -43,6 +42,11 @@ class WhackAMole(gym.Env):
                              window_size = self.window_size)
             }
         )
+        self.get_task_parameters()
+        self.setup_rendermode(render_mode)
+
+    def setup_rendermode(self, render_mode = None):
+        self.render_mode = render_mode
         if self.render_mode == "human":
             import pygame  # import here to avoid pygame dependency with no render
             pygame.init()
@@ -54,7 +58,6 @@ class WhackAMole(gym.Env):
             self.window = None
             self.clock = None
         self.renderer = Renderer(self.render_mode, self._render_frame)
-        self.get_task_parameters()
 
     def set_params(self, params):
         self.params = params
@@ -121,15 +124,15 @@ class WhackAMole(gym.Env):
                 "hit": spaces.Discrete(2)
             }
         )
-        if action == 1:
+        if action == 1: # hit
             a["hit"] = 1
         else:
             a["hit"] = 0
-        if action >= 2 and action <= 3:
+        if action >= 2 and action <= 3: # speed
             a["gaze_step"] = action - 1
         else:
             a["gaze_step"] = 0
-        if action >= 4 and action <= 6:
+        if action >= 4 and action <= 6: # rotation
             a["gaze_dir"] = action - 3
         else:
             a["gaze_dir"] = 0
