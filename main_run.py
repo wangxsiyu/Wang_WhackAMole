@@ -2,7 +2,7 @@ from func_visualize import visualize_env
 from gym_whackamole.envs import WhackAMole
 import func_visualize
 
-env = WhackAMole(render_mode="human")
+env = WhackAMole(render_mode="human", version = "full")
 params = env.params
 print(params)
 params['mole']['p_popping'] = 0.5

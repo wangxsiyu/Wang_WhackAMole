@@ -16,9 +16,11 @@ class Gaze(spaces.Box):
             params['radius'] = 50
             params['alpha_step'] = 2
             params['alpha_dir'] = 2
+            params['_vstep_0'] = 0.1
             params['_vstep_initial'] = 1.0
             params['_vstep_MAX'] = 30.0
-            params['_vphi_initial'] = math.pi/18
+            params['_vphi_0'] = math.pi/36
+            params['_vphi_initial'] = math.pi/9
             params['_vphi_MAX'] = math.pi/2
             params['punish_action_step'] = 0
             params['punish_action_dir'] = 0
@@ -53,7 +55,7 @@ class Gaze(spaces.Box):
                 reward += self.params['punish_de_phi_at_0']
             else:
                 self._vphi = self._vphi / self.params['alpha_dir']
-                if np.abs(self._vphi) < self.params['_vphi_initial']:
+                if np.abs(self._vphi) < self.params['_vphi_0']:
                     self._vphi = 0
         elif action_dir == 3: # change direction
             if self._vphi == 0:
@@ -86,7 +88,7 @@ class Gaze(spaces.Box):
                 reward += self.params['punish_de_step_at_0']
             else:
                 self._vstep = self._vstep / self.params['alpha_step']
-                if self._vstep < self.params['_vstep_initial']:
+                if self._vstep < self.params['_vstep_0']:
                     self._vstep = 0
         return reward
 
@@ -97,8 +99,15 @@ class Gaze(spaces.Box):
         reward = r1 + r2 + r3
         return reward
 
+    def regularize_phi(self, x):
+        while x >= 2 * math.pi: # keep phi between 0 to 2 pi
+            x -= 2 * math.pi
+        while x < 0:
+            x += 2 * math.pi
+        return x
+
     def move_gaze(self):
-        self.phi = self.phi + self._vphi
+        self.phi = self.regularize_phi(self.phi + self._vphi)
         x, y = self._gaze_location
         dx = np.cos(self.phi) * self._vstep
         dy = np.sin(self.phi) * self._vstep
@@ -150,7 +159,7 @@ class Gaze(spaces.Box):
         y = np.sin(self.phi) * self.params['radius'] + y
         return np.append(x, y)
 
-    def _render_frame(self, canvas, ishit = 0):
+    def _render_frame(self, canvas, ishit = 0, width_line = 1):
         if ishit == -1:
             width_gaze = 0
         elif ishit == 1:
@@ -165,6 +174,12 @@ class Gaze(spaces.Box):
                 self.params['radius'],
                 width = width_gaze
             )
-        pygame.draw.line(canvas, col_gaze, self._gaze_location, self.get_xy_front())
+        pygame.draw.line(
+                canvas, 
+                col_gaze, 
+                self._gaze_location, 
+                self.get_xy_front(), 
+                width = width_line
+            )
 
         
