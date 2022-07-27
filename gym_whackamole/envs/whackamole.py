@@ -29,7 +29,7 @@ class WhackAMole(gym.Env):
             self.action_space = spaces.Discrete(7)
         elif version == "rotation":
             self.action_space = spaces.Discrete(4)
-
+        self._value_dist = 1
         vMAX = 999.0
         # x,y, radius,is_visible, is_hit (mole), x, y, phi, radius, v_step, v_dir (gaze)
         low = np.array([0,0,0,0,0,
@@ -77,6 +77,8 @@ class WhackAMole(gym.Env):
         params = dict()
         params["mole"] = self.my_observation_space['mole'].get_task_parameters()
         params["gaze"] = self.my_observation_space['gaze'].get_task_parameters()
+        params['reward_rotation'] = 20
+        params['reward_distance'] = 10
         self.params = params
 
     def _render_frame(self, mode: str):
@@ -85,7 +87,8 @@ class WhackAMole(gym.Env):
         import pygame # avoid global pygame dependency. This method is not called with no-render.
     
         canvas = pygame.Surface(self.window_size)
-        canvas.fill((255, 255, 255))
+        colval = (1-self._value_dist) * 255
+        canvas.fill((colval, colval, colval))
        
         self.my_observation_space['mole']._render_frame(canvas)
         ishit = self.my_observation_space['mole'].obs()['ishit']
@@ -132,19 +135,26 @@ class WhackAMole(gym.Env):
         else:
             return False
 
+    def calculate_dist(self, x, y):
+        return np.sqrt(np.sum((x-y) ** 2))
+
     def step(self, action):
         action = self.action_transform(action)
         r1 = self.my_observation_space["gaze"].step(action["gaze_step"],action["gaze_dir"])
         r2 = self.my_observation_space["mole"].step(self.my_observation_space["gaze"].obs(), action["hit"])
         reward = r1 + r2
-        if self.metadata['version'] == "rotation":
-            self._version_rotation_ismatch = self.is_match_phi(self.my_observation_space["gaze"].obs()['xy'],
+
+        self._version_rotation_ismatch = self.is_match_phi(self.my_observation_space["gaze"].obs()['xy'],
             self.my_observation_space["gaze"].obs()['phi'],
             self.my_observation_space["mole"].obs()['xy'])
-            if self._version_rotation_ismatch:
-                reward += 10
-        else:
-            self._version_rotation_ismatch = None
+        if self._version_rotation_ismatch:
+            reward += self.params['reward_rotation']
+        
+        tdist = self.calculate_dist(self.my_observation_space["gaze"].obs()['xy'], 
+            self.my_observation_space["mole"].obs()['xy'])
+        tdistMAX = self.calculate_dist(np.array([0,0]), np.array(self.window_size))
+        self._value_dist = tdist/tdistMAX
+        reward += self.params['reward_distance'] * (1-self._value_dist)
 
         self.reward = self.reward + reward
         self.frame_count += 1
@@ -168,6 +178,7 @@ class WhackAMole(gym.Env):
                 "hit": spaces.Discrete(2)
             }
         )
+        # params['version_needhit']
         if self.metadata['version'] == "full":
             if action == 1: # hit
                 a["hit"] = 1

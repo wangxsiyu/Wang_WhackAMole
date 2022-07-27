@@ -30,6 +30,10 @@ class Gaze(spaces.Box):
             params['punish_ac_phi_at_MAX'] = -1
             params['punish_outofbox'] = 0
             params['is_boundary_flip'] = 1
+            params['version_resample'] = dict({
+                "cond": "fixed",
+                "value": (30,30)
+            })
         self.params = params
 
     def accelerate_dir(self, action_dir):
@@ -131,7 +135,11 @@ class Gaze(spaces.Box):
             return False
 
     def sample_pos(self):
-        t = np.random.random(size = 2) * self.window_size
+        value = self.params['version_resample']
+        if value['cond'] == "uniform":
+            t = np.random.random(size = 2) * self.window_size
+        elif value['cond'] == "fixed":
+            t = np.array(value['value'])
         return t[0], t[1]
 
     def set_pos(self, x, y):
