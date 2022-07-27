@@ -9,10 +9,7 @@ def visualize_env(tenv, model = None):
         #           "gaze_step": np.random.random_integers(0,3), 
         #           "hit": np.random.random_integers(0,2)}
         if model is None:
-            if tenv.metadata['version'] == "full":
-                action = np.random.random_integers(0, 7)
-            elif tenv.metadata['version'] == "rotation":
-                action = np.random.random_integers(0, 4)
+            action = np.random.random_integers(0, tenv.num_actions())
         else:
             action, _state = model.predict(observation, deterministic=False)
         observation, reward, done, info = tenv.step(action)
