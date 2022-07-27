@@ -77,8 +77,8 @@ class WhackAMole(gym.Env):
         params = dict()
         params["mole"] = self.my_observation_space['mole'].get_task_parameters()
         params["gaze"] = self.my_observation_space['gaze'].get_task_parameters()
-        params['reward_rotation'] = 20
-        params['reward_distance'] = 10
+        params['reward_rotation'] = 0
+        params['reward_distance'] = 0
         self.params = params
 
     def _render_frame(self, mode: str):

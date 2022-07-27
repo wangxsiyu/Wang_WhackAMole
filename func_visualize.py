@@ -14,6 +14,7 @@ def visualize_env(tenv, model = None):
             action, _state = model.predict(observation, deterministic=False)
         observation, reward, done, info = tenv.step(action)
         total_reward += reward
+        print(f"reward:{reward}, tot:{total_reward}")
         if done:
             break;
     print(total_reward)

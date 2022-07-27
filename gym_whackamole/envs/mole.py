@@ -81,7 +81,7 @@ class Mole(spaces.Box):
             params['max_life'] = 20
             params['radius'] = 10
             params['reward_hit'] = 100
-            params['reward_miss'] = -10
+            params['reward_miss'] = -1
             params['version_resample'] = dict({
                 "cond": "uniform",
                 "value": None
