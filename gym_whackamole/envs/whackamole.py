@@ -79,6 +79,7 @@ class WhackAMole(gym.Env):
         params["gaze"] = self.my_observation_space['gaze'].get_task_parameters()
         params['reward_rotation'] = 0
         params['reward_distance'] = 0
+        params['epsilon_phi'] = math.pi/36
         self.params = params
 
     def _render_frame(self, mode: str):
@@ -130,7 +131,7 @@ class WhackAMole(gym.Env):
 
     def is_match_phi(self, xy1, phi, xy2):
         phi2 = self.calculate_phi(xy2[0]-xy1[0], xy2[1]-xy1[1])
-        if np.abs(phi - phi2) < math.pi/18:
+        if np.abs(phi - phi2) < self.params['epsilon_phi']:
             return True
         else:
             return False
