@@ -1,5 +1,15 @@
 import numpy as np
-def visualize_env(tenv, model = None):
+from gym.wrappers import RecordVideo
+
+def wrap_env(env):
+    log_dir = './video'
+    env = RecordVideo(env, log_dir)
+    # print(env.recorded_frames)
+    return env
+
+def visualize_env(tenv, model = None, is_record = False):
+    if is_record:
+        tenv = wrap_env(tenv)
     observation, info = tenv.reset(return_info = True)
     # n_frames = 100
     total_reward = 0
@@ -11,10 +21,11 @@ def visualize_env(tenv, model = None):
         if model is None:
             action = np.random.random_integers(0, tenv.num_actions())
         else:
-            action, _state = model.predict(observation, deterministic=False)
+            action = model.predict(observation, deterministic=True)
         observation, reward, done, info = tenv.step(action)
         total_reward += reward
-        print(f"reward:{reward}, tot:{total_reward}")
+        # print(observation, reward, done, action)
+        # print(f"reward:{reward}, tot:{total_reward}")
         if done:
             break;
     print(total_reward)

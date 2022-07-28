@@ -39,36 +39,34 @@ class Gaze(spaces.Box):
 
     def accelerate_dir(self, action_dir):
         reward = 0
-        if action_dir == 1:
-            self._vphi = self.params['_vphi_initial']
-        elif action_dir == 0:
-            self._vphi = -self.params['_vphi_initial']
-        # else:
-        #     self._vphi = 0
         # if action_dir == 0: # no action taken
         #     reward = 0
         # else:
         #     reward = self.params['punish_action_dir']
 
-        # if action_dir == 1: # accelarate
-        #     if np.abs(self._vphi) >= self.params['_vphi_MAX']:
-        #         reward += self.params['punish_ac_phi_at_MAX']
-        #     else:
-        #         if self._vphi == 0:
-        #             self._vphi = self.params['_vphi_initial'] * np.sign(np.random.random() - 0.5)
-        #         else:
-        #             self._vphi = self._vphi * self.params['alpha_dir']
-        #             if self._vphi > self.params['_vphi_MAX']:
-        #                 self._vphi = self.params['_vphi_MAX']
-        #             elif self._vphi < -self.params['_vphi_MAX']:
-        #                 self._vphi = -self.params['_vphi_MAX']
-        # elif action_dir == 2: # decelarate
-        #     if self._vphi == 0:
-        #         reward += self.params['punish_de_phi_at_0']
-        #     else:
-        #         self._vphi = self._vphi / self.params['alpha_dir']
-        #         if np.abs(self._vphi) < self.params['_vphi_0']:
-        #             self._vphi = 0
+        if action_dir == 1: # accelarate
+            if np.abs(self._vphi) >= self.params['_vphi_MAX']:
+                reward += self.params['punish_ac_phi_at_MAX']
+            else:
+                if self._vphi == 0:
+                    self._vphi = self.params['_vphi_initial'] * np.sign(np.random.random() - 0.5)
+                else:
+                    self._vphi = self._vphi * self.params['alpha_dir']
+                    if self._vphi > self.params['_vphi_MAX']:
+                        self._vphi = self.params['_vphi_MAX']
+                    elif self._vphi < -self.params['_vphi_MAX']:
+                        self._vphi = -self.params['_vphi_MAX']
+        elif action_dir == 2: # decelarate
+            if self._vphi == 0:
+                reward += self.params['punish_de_phi_at_0']
+            else:
+                self._vphi = self._vphi / self.params['alpha_dir']
+                if np.abs(self._vphi) < self.params['_vphi_0']:
+                    self._vphi = 0        
+        elif action_dir == 3:
+            self._vphi = 0
+        else:
+            self._vphi = self._vphi
         # elif action_dir == 3: # change direction
         #     if self._vphi == 0:
         #         reward += self.params['punish_de_phi_at_0']
@@ -115,24 +113,27 @@ class Gaze(spaces.Box):
         return reward
 
     def regularize_phi(self, x):
+        reward = 0
         while x >= 2 * math.pi: # keep phi between 0 to 2 pi
             x -= 2 * math.pi
         while x < 0:
             x += 2 * math.pi
-        return x
+        return x, reward
 
-    
     def regularize_phi2(self, x):
+        reward = 0
         if x >= 2 * math.pi: # keep phi between 0 to 2 pi
             x = 2 * math.pi
+            reward = -1
         if x < 0:
             x = 0
-        return x
+            reward = -1
+        return x, reward
 
 
     def move_gaze(self):
-        self.phi = self.regularize_phi2(self.phi + self._vphi)
-        reward = 0
+        self.phi, treward = self.regularize_phi(self.phi + self._vphi)
+        reward = treward
         # x, y = self._gaze_location
         # dx = np.cos(self.phi) * self._vstep
         # dy = np.sin(self.phi) * self._vstep

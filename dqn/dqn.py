@@ -4,6 +4,7 @@ import torch.optim as optim
 # from dqn.replay import ReplayMemory
 # from dqn.replay import Transition
 from itertools import count
+import math
 import numpy as np
 # import torch.nn.functional as F
 from collections import namedtuple, deque
@@ -30,43 +31,63 @@ class ReplayMemory(object):
 class DQN_network(nn.Module):
     def __init__(self, n_obs, n_action):
         super(DQN_network, self).__init__()
+        h1 = 8
+        h2 = 8
+        h3 = 4
         self.dqn = nn.Sequential(
-            nn.Linear(n_obs, 64),
+            nn.Linear(n_obs, h1),
             nn.ReLU(),
-            nn.Linear(64, 64),
+            nn.Linear(h1, h2),
             nn.ReLU(),
-            nn.Linear(64, n_action)
+            nn.Linear(h2, h3),
+            nn.ReLU(),
+            nn.Linear(h3, n_action)
         )
 
     def forward(self, x):
         return self.dqn(x)
 
 class DQN_agent():
-    def __init__(self, env):
+    def __init__(self, env, eps_start  = 1):
         self.env = env
-        self.dqn_policy = DQN_network(2, env.num_actions())
-        self.dqn_target = DQN_network(2, env.num_actions())
+        in_num = 5
+        self.dqn_policy = DQN_network(in_num, env.num_actions())
+        self.dqn_target = DQN_network(in_num, env.num_actions())
         self.dqn_target.load_state_dict(self.dqn_policy.state_dict())
+        self.dqn_target.eval()
         self.memory = ReplayMemory(10000)
         self.batch_size = 32
-        self.target_update = 10
+        self.target_update = 20
         self.gamma = 0.999
+        self.eps_end = 0.05
+        self.eps_start = eps_start
+        self.eps_decay = 200
         self.optimizer = optim.Adam(self.dqn_policy.parameters())
+        self.steps_done = 0
+        self.device = "mps" # ("cuda" if torch.cuda.is_available() else "cpu")
 
-        self.device = "cpu" # torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    def predict(self, obs, deterministic = False):
+        obs = torch.tensor(obs, dtype = torch.float, device = self.device)
+        eps_threshold = self.eps_end + (self.eps_start - self.eps_end) * \
+            math.exp(-1. * self.steps_done / self.eps_decay)
+        self.steps_done += 1
+        if random.random() > eps_threshold or deterministic:
+            with torch.no_grad():
+                return self.dqn_policy(obs).argmax().view(1,1)
+        else:
+            return torch.randint(0, 2, (1,1), device = self.device, dtype=torch.long)
 
-    def choose_action(self, obs):
-        return torch.randint(0, 2, (1,), device = self.device)
-
-    def train(self, num_episodes = 1):
+    def train(self, num_episodes = 1, n_log = 10):
         env = self.env
         for i_episode in range(num_episodes):
+            if i_episode % n_log == 0:
+                print(f"@episode = {i_episode}")
             obs = env.reset()
             for t in count():
                 # Select and perform an action
-                action = self.choose_action(obs)
+                action = self.predict(obs)
                 obs_next, reward, done, _ = env.step(action.item())
-                reward = torch.tensor([reward], device = self.device)
+                reward = torch.tensor([reward], device = self.device, dtype = torch.float)
                 # Store the transition in memory
                 self.memory.push(obs, action, obs_next, reward)
                 # Move to the next state
@@ -78,7 +99,15 @@ class DQN_agent():
             # Update the target network, copying all weights and biases in DQN
             if i_episode % self.target_update == 0:
                 self.dqn_target.load_state_dict(self.dqn_policy.state_dict())
+                self.print_evaluate()
         print('Complete')
+
+    def print_evaluate(self):
+        pass
+        # print('weights:')
+        # ps = self.dqn_target.parameters()
+        # for p in ps:
+            # print(p)
 
     def step_train(self):
         if len(self.memory) < self.batch_size:
@@ -88,8 +117,8 @@ class DQN_agent():
         
         non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
             batch.next_state)), device = self.device, dtype = torch.bool)
-        non_final_next_states = torch.tensor([s for s in batch.next_state
-            if s is not None], device = self.device, dtype = torch.float)
+        non_final_next_states = torch.tensor(np.vstack([s for s in batch.next_state
+            if s is not None]), device = self.device, dtype = torch.float)
         state_batch = torch.tensor(batch.state, device = self.device, dtype = torch.float)
         action_batch = torch.tensor(batch.action, device  = self.device)
         reward_batch = torch.cat(batch.reward)

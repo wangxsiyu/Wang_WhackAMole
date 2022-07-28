@@ -49,7 +49,7 @@ class WhackAMole2(gym.Env):
             }
         )
 
-        self.action_space = spaces.Discrete(2)
+        self.action_space = spaces.Discrete(4)
         self.get_task_parameters()
         self.setup_rendermode(render_mode)
 
@@ -80,7 +80,7 @@ class WhackAMole2(gym.Env):
         params["gaze"] = self.my_observation_space['gaze'].get_task_parameters()
         params['reward_rotation'] = 0
         params['reward_distance'] = 0
-        params['epsilon_phi'] = math.pi/36
+        params['epsilon_phi'] = math.pi/18
         self.params = params
 
     def _render_frame(self, mode: str):
@@ -151,7 +151,7 @@ class WhackAMole2(gym.Env):
             self.my_observation_space["mole"].obs()['xy'])
         if self._version_rotation_ismatch:
             reward += self.params['reward_rotation']
-            done = True
+            done = False
         else:
             done = False
         
@@ -178,7 +178,7 @@ class WhackAMole2(gym.Env):
         return obs, reward, done, info
 
     def num_actions(self):
-        num = 2
+        num = 4
         # mole = self.my_observation_space['mole']
         # gaze = self.my_observation_space['gaze']
         # num = 1 + 3 # nothing + rotations
