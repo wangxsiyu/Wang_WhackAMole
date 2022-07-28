@@ -28,9 +28,9 @@ venv.set_params(params)
 
 dqn = DQN_agent(env)
 
-# dqn = torch.load('dqn_v1_fixedmole')
-dqn.train(1000, n_log = 100)
-torch.save(dqn,'dqn_v1_fixedmole')
+dqn = torch.load('dqn_v1_fixedmole')
+# dqn.train(1000, n_log = 100)
+# torch.save(dqn,'dqn_v1_fixedmole')
 visualize_env(venv, dqn, is_record = True)
 
 

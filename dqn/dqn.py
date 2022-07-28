@@ -33,15 +33,12 @@ class DQN_network(nn.Module):
         super(DQN_network, self).__init__()
         h1 = 8
         h2 = 8
-        h3 = 4
         self.dqn = nn.Sequential(
             nn.Linear(n_obs, h1),
             nn.ReLU(),
             nn.Linear(h1, h2),
             nn.ReLU(),
-            nn.Linear(h2, h3),
-            nn.ReLU(),
-            nn.Linear(h3, n_action)
+            nn.Linear(h2, n_action)
         )
 
     def forward(self, x):
@@ -50,7 +47,7 @@ class DQN_network(nn.Module):
 class DQN_agent():
     def __init__(self, env, eps_start  = 1):
         self.env = env
-        in_num = 5
+        in_num = 1
         self.dqn_policy = DQN_network(in_num, env.num_actions())
         self.dqn_target = DQN_network(in_num, env.num_actions())
         self.dqn_target.load_state_dict(self.dqn_policy.state_dict())
