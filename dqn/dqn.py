@@ -64,7 +64,7 @@ class DQN_agent():
         self.eps_decay = 200
         self.optimizer = optim.Adam(self.dqn_policy.parameters())
         self.steps_done = 0
-        self.device = "mps" # ("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = "cpu" #("cuda" if torch.cuda.is_available() else "cpu")
 
     def predict(self, obs, deterministic = False):
         obs = torch.tensor(obs, dtype = torch.float, device = self.device)
@@ -117,11 +117,11 @@ class DQN_agent():
         
         non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
             batch.next_state)), device = self.device, dtype = torch.bool)
-        non_final_next_states = torch.tensor(np.vstack([s for s in batch.next_state
-            if s is not None]), device = self.device, dtype = torch.float)
+        temp = np.vstack([s for s in batch.next_state if s is not None])
+        non_final_next_states = torch.tensor(temp, device = self.device, dtype = torch.float)
         state_batch = torch.tensor(batch.state, device = self.device, dtype = torch.float)
         action_batch = torch.tensor(batch.action, device  = self.device)
-        reward_batch = torch.cat(batch.reward)
+        reward_batch = torch.cat(batch.reward).to(self.device)
 
         # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
         # columns of actions taken. These are the actions which would've been taken
