@@ -1,1 +1,0 @@
-from gym_whackamole_singleintegrator.envs.whackamole import WhackAMole_singleintegrator
