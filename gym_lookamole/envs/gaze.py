@@ -16,16 +16,21 @@ class Gaze(spaces.Box):
             params = dict()
             params['radius'] = 100
             params['_v0'] = math.pi/18
+            params['_cost_turn'] = 0.1
         self.params = params
 
     def step(self, action):
         if action == 1:
             self._vphi = self.params['_v0']
+            reward = -0.1 #self.params['_cost_turn']
         elif action == 2:
             self._vphi = -self.params['_v0']
+            reward = -0.1 #self.params['_cost_turn']
         else:
             self._vphi = 0
+            reward = 0
         self.phi = self.regularize_phi(self.phi + self._vphi)
+        return reward
 
     def regularize_phi(self, x):
         while x >= 2 * math.pi: # keep phi between 0 to 2 pi

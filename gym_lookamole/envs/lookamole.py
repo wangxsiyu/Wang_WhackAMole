@@ -118,16 +118,16 @@ class LookAMole(gym.Env):
             return False
 
     def step(self, action):
-        self.my_observation_space["gaze"].step(action)
+        reward = self.my_observation_space["gaze"].step(action)
         self.my_observation_space["mole"].step()
 
         self._version_rotation_ismatch = self.is_match_phi(self.my_observation_space["gaze"].obs()['xy'],
             self.my_observation_space["gaze"].obs()['phi'],
             self.my_observation_space["mole"].obs()['xy'])
         if self._version_rotation_ismatch:
-            reward = self.params['reward_rotation']
+            reward += self.params['reward_rotation']
         else:
-            reward = 0
+            reward += 0
 
         self.frame_count += 1
         if self.frame_count >= self.total_num_of_frames:

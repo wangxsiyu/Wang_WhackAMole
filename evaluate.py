@@ -25,7 +25,7 @@ def eval_behavior(tenv, model = None, n_episode = 50, n_frame = 50):
     return rewards, actions
 
 
-def eval_q(model = None, n = 100):
+def eval_q(model = None, n = 1000):
     phi = np.linspace(0, math.pi * 2, n)
     q = np.zeros((n,3))
     if model is not None:
@@ -43,6 +43,7 @@ def eval(tenv, model = None):
     for i in range(3):
         ax[2].plot(x, q[:,i], label = labs[i])
     ax[2].legend()
+    ax[2].set_xlabel('phi')
     plt.show()
 
 

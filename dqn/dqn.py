@@ -48,7 +48,7 @@ class DQN():
     def __init__(self, env, in_num = 3):
         self.env = env
         self.in_num = in_num
-        self.device = torch.device("mps") if torch.backends.mps.is_available() else "cpu"
+        self.device = "cpu" #torch.device("mps") if torch.backends.mps.is_available() else "cpu"
         self.dqn_policy = DQN_network(in_num, env.num_actions())
         self.dqn_target = DQN_network(in_num, env.num_actions())
         self.dqn_policy.to(self.device)
